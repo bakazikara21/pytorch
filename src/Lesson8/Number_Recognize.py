@@ -232,3 +232,42 @@ import os
 print(os.getcwd())
 
 # %%
+plt.figure(figsize=(10,3))
+for images,labels in test_loader:
+    # 500枚の画像と、そのラベル [images,labels]
+    for i in range(20):
+        ax = plt.subplot(2,10,i+1)  # 2行10列の枠に画像を貼っていく
+
+        image = images[i]
+        label = labels[i]
+        ##########################################################
+        #
+        #   以下はテストデータの予測ラベルと実際のラベルを図示するコード
+        #
+        ##########################################################
+
+        image = image.to(device)
+        label = label.to(device)
+        # 入力データの順伝播出力
+        outputs = net(image)
+
+        # 予測結果(整数ラベル)に変換
+        predict = torch.max(outputs,0)[1].long()   # 最大値をとる添え字
+
+        if (predict == label):
+            c = 'b'
+        else:
+            c = 'r'
+            
+        # imgの範囲を[0, 1]に戻す
+        image2 = (image + 1)/ 2
+            
+        # イメージ表示
+        plt.imshow(image2.cpu().detach().reshape(28, 28),cmap='gray_r')
+        ax.set_title(f'{label}:{predict}', c=c)
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+    plt.savefig("./data/picture/result_visualize.png")
+    plt.show()
+    break
+# %%
