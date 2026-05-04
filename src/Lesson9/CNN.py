@@ -57,15 +57,15 @@ test_set = datasets.CIFAR10(
     transform=transform
 )
 
-image, label = train_set[0]
+image, label = train_set[0] # 1枚目の画像とラベル
 
 # データローダーの定義
 batch_size = 100        # 100枚の画像を1グループとして学習を行う
 
-# 訓練用データローダー
+# 訓練用データローダー　5万枚の画像データをバッチサイズで分割する
 train_loader = DataLoader(train_set,batch_size=batch_size,shuffle=True)
 
-# テスト用データローダー
+# テスト用データローダー  1万枚の画像データをバッチサイズで分割する
 test_loader = DataLoader(test_set,batch_size=batch_size,shuffle=False)
 
 # 正解ラベルの定義->リストとして定義
@@ -73,6 +73,7 @@ classes = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship'
 
 # %%
 # 次に使いまわすための共通関数を定義する
+# ランダムシードを固定する関数
 def torch_seed(seed=123):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
@@ -160,12 +161,12 @@ def fit(net,criterion,optimizer,epochs,history,device):
         test_acc = n_test_acc   / n_test 
 
         item = np.array([epoch+1,train_loss,train_acc,test_loss,test_acc])
-        history = np.vstack((history,item))
+        history = np.vstack((history,item)) # 1エポックごとに損失と精度を保存していく
         print(f'エポック数：{epoch+1}, テストデータの損失：{test_loss:.5f}, テストデータの精度：{test_acc:.5f}')
     return history
 
 # 学習ログ解析->学習後にネットワークの性能を可視化する関数
-def evaluate_history(history,png_loss, png_acc):
+def evaluate_history(history):
     #損失と精度の確認
     print(f'初期状態: 損失: {history[0,3]:.5f} 精度: {history[0,4]:.5f}') 
     print(f'最終状態: 損失: {history[-1,3]:.5f} 精度: {history[-1,4]:.5f}' )
@@ -182,7 +183,7 @@ def evaluate_history(history,png_loss, png_acc):
     plt.ylabel('損失')
     plt.title('学習曲線(損失)')
     plt.legend()
-    plt.savefig('./data/picture/' + png_loss)
+    plt.savefig('./data/picture/result_loss.png')
     plt.show()
 
     # 学習曲線の表示 (精度)
@@ -194,7 +195,7 @@ def evaluate_history(history,png_loss, png_acc):
     plt.ylabel('精度')
     plt.title('学習曲線(精度)')
     plt.legend()
-    plt.savefig('./data/picture/' + png_acc)
+    plt.savefig('./data/picture/result_acc.png')
     plt.show()
 
 # イメージとラベル表示
@@ -298,11 +299,11 @@ history = np.zeros((0,5))
 history = fit(net,criterion,optimizer,epochs,history,device)
 
 # %%
-# 学習結果を表示
-evaluate_history(history,'result_loss.png','result_acc.png')
+# 学習結果を表示 -> CNNモデルの損失と精度を可視化
+evaluate_history(history)
 
 # %%
-# 最初の50個の表示
+# 最初の50個の表示 -> 実際にこのモデルがどういう挙動をとるのか確認
 show_images_labels(test_loader, classes, net, device)
 
 # %%
