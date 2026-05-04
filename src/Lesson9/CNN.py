@@ -68,8 +68,8 @@ train_loader = DataLoader(train_set,batch_size=batch_size,shuffle=True)
 # テスト用データローダー
 test_loader = DataLoader(test_set,batch_size=batch_size,shuffle=False)
 
-# 正解ラベルの定義
-classes = {'plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck'}
+# 正解ラベルの定義->リストとして定義
+classes = ['plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
 # %%
 # 次に使いまわすための共通関数を定義する
@@ -297,8 +297,12 @@ history = np.zeros((0,5))
 # 以下、fit()関数を使って学習を行う
 history = fit(net,criterion,optimizer,epochs,history,device)
 
+# %%
 # 学習結果を表示
 evaluate_history(history,'result_loss.png','result_acc.png')
 
+# %%
 # 最初の50個の表示
 show_images_labels(test_loader, classes, net, device)
+
+# %%
