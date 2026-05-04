@@ -42,17 +42,18 @@ transform = transforms.Compose([
 ])
 
 # datasetからCIFAR-10の画像を取得
+# トロント大学のurl = https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
 data_root = './data'
 train_set = datasets.CIFAR10(
     root = data_root,
     train=True,
-    download=True,
+    download=True, # トロント大学のサーバーがダウンしているとダウンロードできないことに注意
     transform=transform
 )
 test_set = datasets.CIFAR10(
     root = data_root,
     train=False,
-    download=True,
+    download=True, # トロント大学のサーバーがダウンしているとダウンロードできないことに注意
     transform=transform
 )
 
