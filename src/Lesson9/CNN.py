@@ -93,25 +93,25 @@ def fit(net,criterion,optimizer,epochs,history,device):
         # 1エポックあたりの合計損失
         n_train_loss, n_test_loss = 0.0,0.0
 
-        # 1エポックあたりの合計データ数
+        # 1エポックあたりの合計データ数 今回は50000, 10000という定数
         n_train, n_test = 0,0
 
         # 訓練フェーズを明示する
         net.train()
         for images,labels in tqdm(train_loader):
-            # 1バッチあたりのデータ件数
+            # 1バッチあたりのデータ件数 今回は100個
             train_batch_size = len(labels)
             n_train += train_batch_size
 
             # 勾配の初期化
             optimizer.zero_grad()
 
-            # 入力データとラベルをGPUに送ってから出力を売る
+            # 入力データとラベルをGPUに送ってから出力を得る
             inputs = images.to(device)
             labels = labels.to(device)
             outputs = net(inputs)
 
-            # 損失の計算
+            # 損失の計算 CNNだとsoftmax + 交差エントロピー
             loss = criterion(outputs,labels)
 
             # 勾配の計算
@@ -126,7 +126,7 @@ def fit(net,criterion,optimizer,epochs,history,device):
             # 正解数の加算
             n_train_acc += (predict == labels).sum().item()
 
-            # 損失の加算
+            # 損失の加算 -> 損失は平均になっているので総和に直す
             n_train_loss += loss.item() * train_batch_size
 
         # 訓練フェーズを明示する
@@ -141,7 +141,7 @@ def fit(net,criterion,optimizer,epochs,history,device):
             labels = labels_test.to(device)
             outputs = net(inputs)
 
-            # 損失の計算
+            # 損失の計算 CNNだとsoftmax + 交差エントロピー
             loss = criterion(outputs,labels)
 
             # 予測結果
@@ -153,7 +153,7 @@ def fit(net,criterion,optimizer,epochs,history,device):
             # 損失の加算
             n_test_loss += loss.item() * test_batch_size
 
-        # 1エポックが終了したので、損失と精度を計算する
+        # 1エポックが終了したので、損失と精度の平均を計算する
         train_loss = n_train_loss / n_train
         test_loss  = n_test_loss  / n_test
 
@@ -172,7 +172,7 @@ def evaluate_history(history):
     print(f'最終状態: 損失: {history[-1,3]:.5f} 精度: {history[-1,4]:.5f}' )
 
     num_epochs = len(history)
-    unit = num_epochs / 10
+    unit = num_epochs / 10  # 今までの記録を10分割してgridを表示?
 
     # 学習曲線の表示 (損失)
     plt.figure(figsize=(9,8))
@@ -257,7 +257,7 @@ class CNN(nn.Module):
         self.maxpool = nn.MaxPool2d((2,2))  # 2*2の領域の最大値をスライディングして取得
         self.flatten = nn.Flatten()         # 1次元ベクトル化
         self.l1 = nn.Linear(6272,n_hidden)  # 1次元ベクトルを全結合層に入力
-        self.l2 = nn.Linear(n_hidden,n_output)  # ソフトマックスにかける前の出力
+        self.l2 = nn.Linear(n_hidden,n_output)  # ソフトマックスにかける前の全結合層
 
         self.features = nn.Sequential(
             self.conv1,
@@ -273,9 +273,9 @@ class CNN(nn.Module):
         )
     
     def forward(self,x):
-        x1 = self.features(x)
-        x2 = self.flatten(x1)
-        x3 = self.classifier(x2)
+        x1 = self.features(x)   # 畳み込み層とプーリング層で特徴を抽出して
+        x2 = self.flatten(x1)   # 平滑化して
+        x3 = self.classifier(x2)    # 全結合層で多クラス分類を行う
         return x3
 
 # 学習に必要な変数の初期化
@@ -284,15 +284,15 @@ n_hidden = 128  # 全結合層の隠れ層のノード数
 
 # 乱数初期化
 torch_seed()
-net = CNN(n_output,n_hidden).to(device)
+net = CNN(n_output,n_hidden).to(device) # GPUを使うので.to()が必要
 
-epochs = 50
-eps = 0.01
-optimizer = optim.SGD(net.parameters(),lr=eps)
+epochs = 40     # エポック数：30で十分だが50回計算してみる
+eps = 0.001      # 学習率：教科書は0.01だが、変えてみるのも面白そう
+optimizer = optim.SGD(net.parameters(),lr=eps)  # 勾配降下法のアルゴリズム
 
-criterion = nn.CrossEntropyLoss()
+criterion = nn.CrossEntropyLoss()   # 多クラス分類をしたいので、softmax + 交差エントロピー関数
 
-history = np.zeros((0,5))
+history = np.zeros((0,5))   # 損失と精度をこのオブジェクトに記録する
 
 # %% 
 # 以下、fit()関数を使って学習を行う
@@ -306,4 +306,26 @@ evaluate_history(history)
 # 最初の50個の表示 -> 実際にこのモデルがどういう挙動をとるのか確認
 show_images_labels(test_loader, classes, net, device)
 
+# %%
+# 以下、fit()関数を使って追加学習を行う
+history = fit(net,criterion,optimizer,epochs,history,device)
+
+# %%
+# 学習結果を表示 -> CNNモデルの損失と精度を可視化
+evaluate_history(history)
+
+# %%
+# 最初の50個の表示 -> 実際にこのモデルがどういう挙動をとるのか確認
+show_images_labels(test_loader, classes, net, device)
+# %%
+# 以下、fit()関数を使って追加の追加学習を行う
+history = fit(net,criterion,optimizer,epochs,history,device)
+
+# %%
+# 学習結果を表示 -> CNNモデルの損失と精度を可視化
+evaluate_history(history)
+
+# %%
+# 最初の50個の表示 -> 実際にこのモデルがどういう挙動をとるのか確認
+show_images_labels(test_loader, classes, net, device)
 # %%
