@@ -3,14 +3,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import japanize_matplotlib
+from IPython.display import display
 # torch関連ライブラリのインポート
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import torchvision.datasets as datasets
+from torchinfo import summary
+from torchviz import make_dot
 import torchvision.transforms as transforms
-from torch.utils.data import DataLoader
+from torch.utils.data import Dataset, DataLoader
+import torchvision.datasets as datasets
 # warning表示off
 import warnings
 warnings.simplefilter('ignore')
@@ -43,7 +46,7 @@ transform = transforms.Compose([
 
 # datasetからCIFAR-10の画像を取得
 # トロント大学のurl = https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
-data_root = './data'
+data_root = '../data'
 train_set = datasets.CIFAR10(
     root = data_root,
     train=True,
