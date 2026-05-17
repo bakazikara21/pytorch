@@ -31,3 +31,9 @@ datasets/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# =========================
+# メッセージBot
+# =========================
+GoogleCalender
+MessageBot.py
