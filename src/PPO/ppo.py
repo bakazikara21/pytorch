@@ -8,7 +8,7 @@ from torch.distributions import Normal
 class PPO(nn.Module):
     def __init__(
         self,
-        state_dim: int = 10,
+        state_dim: int = 11,
         action_dim: int = 3,
         hidden_dim: int = 64,
     ) -> None:
