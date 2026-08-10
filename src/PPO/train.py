@@ -4,7 +4,7 @@ import torch
 import torch.optim as optim
 from ppo import PPO
 
-env = gym.make("Pendulum-v1")
+env = gym.make("Hopper-v5")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 model: PPO = PPO().to(device=device)
