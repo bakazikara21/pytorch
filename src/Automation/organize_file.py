@@ -5,6 +5,7 @@ from pathlib import Path
 import shutil
 
 # フォルダの選択ダイアログ
+# pip install pysimplegui
 import PySimpleGUI as sg
 
 
