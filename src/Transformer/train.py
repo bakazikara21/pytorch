@@ -20,6 +20,7 @@ for iter in range(1000):
     targets = y.reshape(-1)
 
     # 予測と正解Token IDからLossを計算する。
+    # targetに対応するTokenの確率に-log()をした値
     loss = loss_fn(logits, targets)
 
     # 前回のiterationで計算された勾配を消去する。
