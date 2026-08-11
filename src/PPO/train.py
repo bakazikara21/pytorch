@@ -4,11 +4,17 @@ import torch
 import torch.optim as optim
 from ppo import PPO
 
+# 環境を定義
 env = gym.make("Hopper-v5")
+
+# GPUがあれば使う
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+# PPOモデルの作成と最適化関数の作成
 model: PPO = PPO().to(device=device)
 optimizer = optim.Adam()
+
+# ハイパーパラメータを定義
 ppo_epochs = 4
 rollout_steps = 2048
 batch_size = 256
