@@ -2,7 +2,7 @@
 import gymnasium as gym
 import torch
 import torch.optim as optim
-from ppo import PPO
+from PPO import PPO
 
 # 環境を定義
 env = gym.make("Hopper-v5")
