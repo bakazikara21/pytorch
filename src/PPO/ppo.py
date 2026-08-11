@@ -14,7 +14,7 @@ class PPO(nn.Module):
     ) -> None:
         super().__init__()
 
-        # Actorネットワーク
+        # Actorネットワーク:状態ベクトル -> 行動ベクトルの平均
         self.actor: nn.Sequential = nn.Sequential(
             # 状態ベクトルをhidden_dim次元へ変換します。
             nn.Linear(state_dim, hidden_dim),
@@ -32,7 +32,7 @@ class PPO(nn.Module):
             nn.Linear(hidden_dim, action_dim),
         )
 
-        # Criticネットワーク
+        # Criticネットワーク:状態ベクトル -> 状態価値（スカラー）
         self.critic: nn.Sequential = nn.Sequential(
             # 状態ベクトルを hidden_dim 次元へ変換します。
             nn.Linear(state_dim, hidden_dim),
