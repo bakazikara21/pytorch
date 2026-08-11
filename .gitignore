@@ -42,4 +42,4 @@ MessageBot.py
 # 対象外フォルダ
 # =========================
 src/Automation
-src/to-do-app
+src/todo-app
