@@ -1,27 +1,50 @@
+from pathlib import Path
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from Transformer.tranformer import SmallTransformer
+from transformer import SmallTransformer
+from transformer import EncoderDecoder
 
-tokens = torch.randint(0, 10000, (8, 32))
-y = torch.randint(0, 10000, (8, 32))
-net = SmallTransformer()
-optimizer = optim.Adam()
-loss_fn = nn.CrossEntropyLoss()
+# GPUを使用する
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-for iter in range(1000):
+# 学習する文字列
+y = "吾輩は猫である。名前はまだ無い。どこで生れたかとんと見当がつかぬ。"
+
+# 学習対象の文字列から、教師データ、入力データ用のToken IDの配列を作る。
+encoder_decoder = EncoderDecoder(y)
+y_tokens = encoder_decoder.encode(y)
+
+# Vocabularyのサイズを取得する
+vocab_size = encoder_decoder.get_vocab_size()
+
+# 小型Transformerモデルを生成
+net = SmallTransformer(vocab_size).to(device)
+
+# 最適化アルゴリズムと損失関数を設定
+optimizer = optim.Adam(net.parameters())
+criterion = nn.CrossEntropyLoss()
+epochs = 1000
+
+# Transformerへの入力は教師データを一文字ずらした文字列とする
+x_tokens = encoder_decoder.encode(' ' + y[:-1]).unsqueeze(0).to(device)
+
+# logits=(33, 118) に対して targets=(33,)が必要
+targets = y_tokens.reshape(-1).to(device)
+
+for epoch in range(epochs):
     # Transformerで次トークンのlogitsを計算する。
-    logits = net(tokens)
+    logits = net(x_tokens)
+
+    # 最後のトークンのロジットのみを抽出する
+    next_token_logits = logits[:, -1, :]
 
     # CrossEntropyLoss用に、バッチ次元と系列次元をまとめる。
-    logits = logits.reshape(-1, 10000)
-
-    # 元の教師データyは変更せず、Loss計算用の1次元Tensorを作る。
-    targets = y.reshape(-1)
+    logits = logits.reshape(-1, vocab_size)
 
     # 予測と正解Token IDからLossを計算する。
     # targetに対応するTokenの確率に-log()をした値
-    loss = loss_fn(logits, targets)
+    loss = criterion(logits, targets)
 
     # 前回のiterationで計算された勾配を消去する。
     optimizer.zero_grad()
@@ -32,21 +55,13 @@ for iter in range(1000):
     # 勾配を使ってパラメータを更新する。
     optimizer.step()
 
-    # 最後のトークンのロジットのみを抽出する
-    next_token_logits = logits[:, -1, :]
+    # 損失を出力
+    if epoch % 10 == 0:
+        loss_train = loss.item()
+        print(f"epoch = {epoch+1}, loss_train = {loss_train}")
 
-    # 各語彙のlogitを確率に変換する。
-    # shape: (B, vocab_size) -> (B, vocab_size)
-    probs = torch.softmax(next_token_logits, dim=-1)
+# 学習済みモデルの保存
+model_path = Path(__file__).with_name("small_transformer.pth")
+torch.save(net.state_dict(), model_path)
 
-    # 確率分布 probs に従って、各バッチから1つのToken IDをサンプリングする。
-    # probs.shape = (B, vocab_size)
-    next_token_id = torch.multinomial(probs, num_samples=1)
-
-    # 次トークンに系列長方向の次元を1つ追加する。
-    # (B,) -> (B, 1)
-    next_token = next_token_id.unsqueeze(-1)
-
-    # 既存のToken列の末尾に、生成した1Tokenを追加する。
-    # (B, T) + (B, 1) -> (B, T+1)
-    tokens = torch.cat([tokens, next_token], dim=1)
+print(f"モデルを保存しました: {model_path}")

@@ -200,42 +200,38 @@ class SmallTransformer(nn.Module):
         # 次トークン予測用のlogitsを返す。
         return logits
 
+class EncoderDecoder:
+    def __init__(self, text: str):
+        # 入力テキストを保存
+        self.text = text
 
-tokens = torch.randint(0, 10000, (8, 32))
-# SmallTransformer クラスから実際のモデルを生成する。
-model = SmallTransformer(
-    vocab_size=10000,
-    d_model=64,
-    num_heads=4,
-    num_layers=4,
-    max_len=128,
-)
+        # Vocabularyを事前に決め打ち。
+        text += ' abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.,?! \
+        あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもらりるれろやゆよわをん。、'
 
-# ダミーのToken IDをモデルへ入力する。
-# tokens.shape = (8, 32)
-logits = model(tokens)
+        # 重複がない配列にする
+        chars = sorted(set(text))
 
-# 出力shapeを確認する。
-print(logits.shape)
+        # 文字 -> Token ID の対応表
+        self.stoi = {ch: i for i, ch in enumerate(chars)}
 
+        # Token ID -> 文字 の対応表
+        self.itos = {i: ch for i, ch in enumerate(chars)}
 
-text = "我輩は猫である。名前はまだない。"
+    # 文字列 -> Token IDのTensor
+    def encode(self, text) -> torch.Tensor:
+        # 入力された文字列を整数の配列にして返す
+        token_ids = [self.stoi[ch] for ch in text]
+        return torch.tensor(token_ids, dtype=torch.long)
 
-# 学習データ全体から、一度だけ語彙を作る。
-chars = sorted(set(text))
+    # Token IDのTensor -> 文字列
+    def decode(self, token_ids: torch.Tensor):
+        # まずTensorからリストに変換する
+        token_ids = token_ids.tolist()
 
-# 文字 -> Token ID
-stoi = {ch: i for i, ch in enumerate(chars)}
+        txt = [self.itos[num] for num in token_ids]
+        outputs = "".join(txt)
+        return outputs
 
-# Token ID -> 文字
-itos = {i: ch for i, ch in enumerate(chars)}
-
-
-def encode(text: str):
-    return [stoi[ch] for ch in text]
-
-
-def decode(token_ids):
-    txt = [itos[num] for num in token_ids]
-    text = "".join(txt)
-    return text
+    def get_vocab_size(self):
+        return len(self.stoi)
