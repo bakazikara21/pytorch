@@ -14,7 +14,7 @@ MLP、CNN、PPO、Transformer を題材に、モデルの構造だけでなく�
 | MLP | 全結合ニューラルネットワーク | 準備中 |
 | CNN | 畳み込みニューラルネットワーク | 準備中 |
 | PPO | Actor-Critic、ロールアウト、GAE、Clipped Objective | 実装中 |
-| Transformer | Causal Self-Attention、Multi-Head Attention、FFN、次トークン予測 | 実装中 |
+| Transformer | Causal Self-Attention、Multi-Head Attention、FFN、次トークン予測 | 完了 |
 
 ## ディレクトリ構成
 
@@ -32,11 +32,12 @@ MLP、CNN、PPO、Transformer を題材に、モデルの構造だけでなく�
     │   ├── PPO.py          # Actor-Criticモデル
     │   └── train.py        # PPOの学習処理
     └── Transformer
-        ├── tranformer.py   # Transformerモデル
-        └── train.py        # Transformerの学習処理
+        ├── transformer.py  # Transformerモデルと文字単位のエンコーダー
+        ├── train.py        # 次トークン予測による学習と重みの保存
+        └── test.py         # 学習済みモデルによる文字列生成
 ```
 
-各モデルでは、ネットワーク定義と学習処理を別ファイルに分けています。
+各モデルではネットワーク定義と学習処理を別ファイルに分け、Transformerには学習済みモデルの生成結果を確認するテストも用意しています。
 
 ## 実行環境
 
@@ -91,22 +92,47 @@ PyTorchのインストール方法は、OSやCUDAのバージョンによって�
 
 ### Transformer
 
-外部のTransformer実装に頼らず、主要な構成要素をPyTorchで組み立てています。
+外部のTransformer実装に頼らず、主要な構成要素をPyTorchで組み立てています。小型のDecoder-only Transformerとして、文字単位の次トークン予測の学習から文字列生成までを確認できます。
 
+- 文字とToken IDを相互変換する `EncoderDecoder`
 - Token EmbeddingとPosition Embedding
 - Multi-Head Causal Self-Attention
 - Layer NormalizationとResidual Connection
 - Feed Forward Network
 - 次トークン予測用の出力層
+- AdamとCross Entropy Lossによる学習
+- CPUとCUDAの自動選択
+- `state_dict` の保存と読み込み
+- 確率分布から1文字ずつ生成する自己回帰推論
 
-現在の学習コードでは、ランダムに生成したToken IDを使って処理の流れを確認しています。
+学習データには、次の文字列を使用しています。
+
+```text
+吾輩は猫である。名前はまだ無い。どこで生れたかとんと見当がつかぬ。
+```
+
+先頭の空白を開始トークンとし、教師データを1文字ずらした文字列をモデルへ入力します。Causal Maskによって未来の文字を参照できない状態で、各位置の次の文字を予測します。
+
+`train.py` は1,000エポック学習し、学習済みの重みを `src/Transformer/small_transformer.pth` に保存します。
+
+```bash
+python src/Transformer/train.py
+```
+
+`test.py` は保存した重みを読み込み、開始トークンから1文字ずつサンプリングして文章を生成します。生成結果と教師データを比較し、文字列が一致したかを表示します。
+
+```bash
+python src/Transformer/test.py
+```
+
+`test.py` では確率的に次の文字を選ぶため、学習状態やサンプリング結果によっては、実行ごとに異なる文章が生成されることがあります。
 
 ## 今後の予定
 
 - [ ] MLPモデルと学習ループの実装
 - [ ] CNNモデルと学習ループの実装
-- [ ] テストと実行例を追加
-- [ ] 依存関係を `requirements.txt` または `pyproject.toml` に整理
+- [ ] PPOの実装と検証を完了
+- [ ] MLP、CNN、PPOのテストと実行例を追加
 
 ## 補足
 
