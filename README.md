@@ -11,8 +11,8 @@ MLP、CNN、PPO、Transformer を題材に、モデルの構造だけでなく�
 
 | モデル | 内容 | 状況 |
 | --- | --- | --- |
-| MLP | 全結合ニューラルネットワーク | 準備中 |
-| CNN | 畳み込みニューラルネットワーク | 準備中 |
+| MLP | 全結合ニューラルネットワーク 数字認識 | 実装中 |
+| CNN | 畳み込みニューラルネットワーク 画像分類 | 実装中 |
 | PPO | Actor-Critic、ロールアウト、GAE、Clipped Objective | 実装中 |
 | Transformer | Causal Self-Attention、Multi-Head Attention、FFN、次トークン予測 | 完了 |
 
@@ -100,8 +100,6 @@ PyTorchのインストール方法は、OSやCUDAのバージョンによって�
 - Layer NormalizationとResidual Connection
 - Feed Forward Network
 - 次トークン予測用の出力層
-- AdamとCross Entropy Lossによる学習
-- CPUとCUDAの自動選択
 - `state_dict` の保存と読み込み
 - 確率分布から1文字ずつ生成する自己回帰推論
 
@@ -121,11 +119,12 @@ python src/Transformer/train.py
 
 `test.py` は保存した重みを読み込み、開始トークンから1文字ずつサンプリングして文章を生成します。生成結果と教師データを比較し、文字列が一致したかを表示します。
 
+`test.py` では確率的に次の文字を選ぶため、学習状態やサンプリング結果によっては、実行ごとに異なる文章が生成されることがあります。
+
 ```bash
 python src/Transformer/test.py
 ```
 
-`test.py` では確率的に次の文字を選ぶため、学習状態やサンプリング結果によっては、実行ごとに異なる文章が生成されることがあります。
 
 ## 今後の予定
 
