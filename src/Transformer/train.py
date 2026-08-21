@@ -56,9 +56,9 @@ for epoch in range(epochs):
     optimizer.step()
 
     # 損失を出力
-    if epoch % 10 == 0:
+    if epoch % 100 == 0:
         loss_train = loss.item()
-        print(f"epoch = {epoch+1}, loss_train = {loss_train}")
+        print(f"epoch = {epoch}, loss_train = {loss_train}")
 
 # 学習済みモデルの保存
 model_path = Path(__file__).with_name("small_transformer.pth")
